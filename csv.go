@@ -5,8 +5,43 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 )
+
+func transpose(reader *csv.Reader, writer *csv.Writer) {
+	order := []string{
+		"id",
+		"content",
+	}
+
+	// 列のマッピング
+	columns := map[string]int{
+		"id":      0,
+		"content": 1,
+	}
+
+	var rows [][]string
+	for {
+		// CSVファイルから1行読み込む
+		record, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+
+		for index, title := range order {
+			fmt.Println(index, ":", title, ":", columns[title])
+			rows = append(rows, []string{title, record[columns[title]]})
+		}
+	}
+
+	// 列の値を転置してCSVファイルに書き込む
+	for _, row := range rows {
+		writer.Write(row)
+	}
+}
 
 func main() {
 	// 入力ファイルを開く
@@ -32,45 +67,6 @@ func main() {
 	writer := csv.NewWriter(outputfile)
 	defer writer.Flush()
 
-	order := []string{
-		"id",
-		"content",
-	}
+	transpose(reader, writer)
 
-	// 列のマッピング
-	columns := map[string]int{
-		"id":      0,
-		"content": 1,
-	}
-
-	var rows [][]string
-	for {
-		// CSVファイルから1行読み込む
-		record, err := reader.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			fmt.Println("Error:", err)
-			return
-		}
-
-		for index, title := range order {
-			titleAcc := fmt.Sprintf("精度:%s", title)
-			if indexAcc, ok := columns[titleAcc]; ok {
-				fmt.Println(index, ":", title, ":", columns[title])
-				rows = append(rows, []string{title, record[columns[title]], record[indexAcc]})
-			} else if strings.HasPrefix(title, "精度:") {
-				continue
-			} else {
-				fmt.Println(index, ":", title, ":", columns[title])
-				rows = append(rows, []string{title, record[columns[title]]})
-			}
-		}
-	}
-
-	// 列の値を転置してCSVファイルに書き込む
-	for _, row := range rows {
-		writer.Write(row)
-	}
 }
