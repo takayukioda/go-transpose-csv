@@ -19,7 +19,7 @@ func transpose(reader *csv.Reader, writer *csv.Writer) {
 		"content": 1,
 	}
 
-	var rows [][]string
+	var count int
 	for {
 		// CSVファイルから1行読み込む
 		record, err := reader.Read()
@@ -30,16 +30,39 @@ func transpose(reader *csv.Reader, writer *csv.Writer) {
 			fmt.Println("Error:", err)
 			return
 		}
+		if count == 0 {
+			count += 1
+			continue
+		}
 
 		for index, title := range order {
 			fmt.Println(index, ":", title, ":", columns[title])
-			rows = append(rows, []string{title, record[columns[title]]})
+			writer.Write([]string{title, record[columns[title]]})
 		}
-	}
 
-	// 列の値を転置してCSVファイルに書き込む
-	for _, row := range rows {
-		writer.Write(row)
+		count += 1
+	}
+}
+
+func aggregate(reader *csv.Reader, writer *csv.Writer) {
+	var count int
+	for {
+		// CSVファイルから1行読み込む
+		record, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		if count == 0 {
+			count += 1
+			continue
+		}
+
+		fmt.Println(record)
+		count += 1
 	}
 }
 
